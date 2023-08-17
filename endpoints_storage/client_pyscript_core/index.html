@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>PyScript Hello World</title>
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-config>
+        packages = ["ipopo"]
+
+        [[fetch]]
+        files = ["ycappuccino/core/framework.py","ycappuccino/api.py","ycappuccino/core/list_components.py", "ycappuccino/core/models/decorators.py", "ycappuccino/core/models/utils.py", "ycappuccino/core/decorator_app",  "${list_python_files}"]
+    </py-config>
+  </head>
+
+  <body>
+
+
+    <div id="main"> </div>
+    <script>
+        function on_click(a_comp_name, a_method ){
+            pyscript.runtime.run(
+               "list_component.call(\""+a_comp_name+"\",\""+a_method+"\")\n"
+            );
+        }
+    </script>
+    <py-script>
+        import ycappuccino.core.framework
+        ycappuccino.core.framework.init(["${list_python_bundles}"])
+
+
+    </py-script>
+  </body>
+</html>
+Footer
