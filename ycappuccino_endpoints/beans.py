@@ -1,4 +1,7 @@
-#app="all"
+
+"""
+    bean that provide request and response object
+"""
 import json, re
 from urllib.parse import parse_qsl, urlsplit
 
