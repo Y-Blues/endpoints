@@ -1,0 +1,22 @@
+---
+models.app:
+  ycappuccino_endpoints: true
+  ycappuccino_service_comm_storage: true
+layers:
+  ycappuccino_endpoints:
+    active: true
+
+  ycappuccino_service_comm:
+    active: true
+    host: localhost
+    port: 0
+    scheme: http
+  ycappuccino_service_comm_storage:
+    active: true
+name: ycappuccino_endpoints
+bundle_prefix: ycappuccino
+config:
+  http_server:
+    active: true
+    port: 9000
+    ip: localhost
