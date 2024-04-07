@@ -1,18 +1,27 @@
-#app="all"
-from ycappuccino_api.core.api import  IActivityLogger
+# app="all"
+from ycappuccino_api.core.api import IActivityLogger
 from ycappuccino_api.endpoints.api import IEndpoint
 import traceback
 
-import pelix.http
-from ycappuccino_core.decorator_app import Layer
+from src.main.python.decorator_app import Layer
 
 import os
 import pelix.remote
 import logging
 import json
-from ycappuccino_endpoints.beans import UrlPath, EndpointResponse
-from pelix.ipopo.decorators import ComponentFactory, Requires, Validate, Invalidate, Provides, BindField, UnbindField, Instantiate, Property
-from ycappuccino_api.endpoints.api import  IRightManager,  IHandlerEndpoint
+from src.main.python.beans import UrlPath, EndpointResponse
+from pelix.ipopo.decorators import (
+    ComponentFactory,
+    Requires,
+    Validate,
+    Invalidate,
+    Provides,
+    BindField,
+    UnbindField,
+    Instantiate,
+    Property,
+)
+from ycappuccino_api.endpoints.api import IRightManager, IHandlerEndpoint
 from ycappuccino_api.core.api import IService
 
 _logger = logging.getLogger(__name__)
@@ -22,12 +31,17 @@ _logger = logging.getLogger(__name__)
 """
 
 
-@ComponentFactory('Endpoint-Factory')
+@ComponentFactory("Endpoint-Factory")
 @Requires("_log", IActivityLogger.__name__, spec_filter="'(name=main)'")
 @Requires("_right_manager", IRightManager.__name__, optional=True)
-@Provides(specifications=[pelix.http.HTTP_SERVLET,IEndpoint.__name__])
-@Instantiate("endpoints")
-@Requires("_handler_endpoints", specification=IHandlerEndpoint.__name__, aggregate=True, optional=True)
+@Provides(specifications=[pelix.http.HTTP_SERVLET, IEndpoint.__name__])
+@Instantiate("http")
+@Requires(
+    "_handler_endpoints",
+    specification=IHandlerEndpoint.__name__,
+    aggregate=True,
+    optional=True,
+)
 @Requires("_services", specification=IService.__name__, aggregate=True, optional=True)
 @Property("_servlet_path", pelix.http.HTTP_SERVLET_PATH, "/api")
 @Property("_reject", pelix.remote.PROP_EXPORT_REJECT, pelix.http.HTTP_SERVLET)
@@ -35,7 +49,7 @@ _logger = logging.getLogger(__name__)
 class Endpoint(IEndpoint):
 
     def __init__(self):
-        super(IEndpoint, self).__init__();
+        super(IEndpoint, self).__init__()
         self._log = None
         self._handler_endpoints = None
         self._map_handler_endpoints = {}
@@ -44,16 +58,18 @@ class Endpoint(IEndpoint):
         self._right_manager = None
 
     def do_GET(self, request, response):
-        """  """
+        """ """
         w_path = request.get_path()
         w_header = request.get_headers()
-        self._log.info("get path={}".format( w_path))
+        self._log.info("get path={}".format(w_path))
 
         if "swagger.json" in w_path:
             w_resp = self.get_swagger_descriptions(w_path, w_header)
         else:
             w_resp = self.get(w_path, w_header)
-        response.send_content(w_resp.get_status(), w_resp.get_json(), "application/json")
+        response.send_content(
+            w_resp.get_status(), w_resp.get_json(), "application/json"
+        )
 
     def do_POST(self, request, response):
         """ """
@@ -71,7 +87,7 @@ class Endpoint(IEndpoint):
             w_str = w_data.decode()
             w_json = None
             if w_str is not None and w_str != "":
-                    w_json = json.loads(w_str)
+                w_json = json.loads(w_str)
             self._log.info("post path={}, data={}".format(w_path, w_str))
 
             w_resp = self.post(w_path, w_header, w_json)
@@ -80,7 +96,9 @@ class Endpoint(IEndpoint):
             for key, value in w_resp.get_header().items():
                 response.set_header(key, value)
 
-        response.send_content(w_resp.get_status(), w_resp.get_json(), "application/json")
+        response.send_content(
+            w_resp.get_status(), w_resp.get_json(), "application/json"
+        )
 
     def do_PUT(self, request, response):
         """ """
@@ -93,16 +111,20 @@ class Endpoint(IEndpoint):
         self._log.info("put path={}, data={}".format(w_path, w_str))
 
         w_resp = self.put(w_path, w_header, w_json)
-        response.send_content(w_resp.get_status(), w_resp.get_json(), "application/json")
+        response.send_content(
+            w_resp.get_status(), w_resp.get_json(), "application/json"
+        )
 
     def do_DELETE(self, request, response):
         """ """
         w_path = request.get_path()
         w_header = request.get_headers()
-        self._log.info("delete path={}".format( w_path))
+        self._log.info("delete path={}".format(w_path))
 
         w_resp = self.delete(w_path, w_header)
-        response.send_content(w_resp.get_status(), w_resp.get_json(), "application/json")
+        response.send_content(
+            w_resp.get_status(), w_resp.get_json(), "application/json"
+        )
 
     def get_tenant(self, a_headers):
         if self._right_manager is not None:
@@ -128,7 +150,9 @@ class Endpoint(IEndpoint):
 
     def post(self, a_path, a_headers, a_body):
         try:
-            w_url_path = UrlPath("post",a_path, self.get_swagger_descriptions(a_path, a_headers))
+            w_url_path = UrlPath(
+                "post", a_path, self.get_swagger_descriptions(a_path, a_headers)
+            )
 
             if w_url_path.get_type() in self._map_handler_endpoints.keys():
                 w_handler_endpoint = self._map_handler_endpoints[w_url_path.get_type()]
@@ -137,17 +161,15 @@ class Endpoint(IEndpoint):
 
         except Exception as e:
             w_body = {
-                "data": {
-                    "error": str(e),
-                    "stack": traceback.format_exc().split("\n")
-                }
+                "data": {"error": str(e), "stack": traceback.format_exc().split("\n")}
             }
-            return EndpointResponse(500, None, None,  w_body)
+            return EndpointResponse(500, None, None, w_body)
 
     def put(self, a_path, a_headers, a_body):
         try:
-            w_url_path = UrlPath("put",a_path, self.get_swagger_descriptions(a_path, a_headers))
-
+            w_url_path = UrlPath(
+                "put", a_path, self.get_swagger_descriptions(a_path, a_headers)
+            )
 
             if w_url_path.get_type() in self._map_handler_endpoints.keys():
                 w_handler_endpoint = self._map_handler_endpoints[w_url_path.get_type()]
@@ -155,20 +177,18 @@ class Endpoint(IEndpoint):
             return EndpointResponse(400)
         except Exception as e:
             w_body = {
-                "data":{
-                    "error":str(e),
-                    "stack": traceback.format_exc().split("\n")
-                }
+                "data": {"error": str(e), "stack": traceback.format_exc().split("\n")}
             }
-            return EndpointResponse(500, None, None,  w_body)
-
+            return EndpointResponse(500, None, None, w_body)
 
     def get_swagger_descriptions(self, a_path, a_headers):
-       return self._map_handler_endpoints["swagger"].get(a_path, a_headers)
+        return self._map_handler_endpoints["swagger"].get(a_path, a_headers)
 
     def get(self, a_path, a_headers):
         try:
-            w_url_path = UrlPath("get",a_path, self.get_swagger_descriptions(a_path, a_headers))
+            w_url_path = UrlPath(
+                "get", a_path, self.get_swagger_descriptions(a_path, a_headers)
+            )
 
             if w_url_path.get_type() in self._map_handler_endpoints.keys():
                 w_handler_endpoint = self._map_handler_endpoints[w_url_path.get_type()]
@@ -176,17 +196,15 @@ class Endpoint(IEndpoint):
             return EndpointResponse(400)
         except Exception as e:
             w_body = {
-                "data": {
-                    "error": str(e),
-                    "stack": traceback.format_exc().split("\n")
-                }
+                "data": {"error": str(e), "stack": traceback.format_exc().split("\n")}
             }
-            return EndpointResponse(500, None, None,  w_body)
-
+            return EndpointResponse(500, None, None, w_body)
 
     def delete(self, a_path, a_headers):
         try:
-            w_url_path = UrlPath("delete",a_path, self.get_swagger_descriptions(a_path, a_headers))
+            w_url_path = UrlPath(
+                "delete", a_path, self.get_swagger_descriptions(a_path, a_headers)
+            )
 
             if w_url_path.get_type() in self._map_handler_endpoints.keys():
                 w_handler_endpoint = self._map_handler_endpoints[w_url_path.get_type()]
@@ -195,12 +213,9 @@ class Endpoint(IEndpoint):
 
         except Exception as e:
             w_body = {
-                "data": {
-                    "error": str(e),
-                    "stack": traceback.format_exc().split("\n")
-                }
+                "data": {"error": str(e), "stack": traceback.format_exc().split("\n")}
             }
-            return EndpointResponse(500, None, None,  w_body)
+            return EndpointResponse(500, None, None, w_body)
 
     @BindField("_handler_endpoints")
     def bind_manager(self, field, a_handler_endpoint, a_service_reference):
@@ -213,9 +228,6 @@ class Endpoint(IEndpoint):
         w_item_plurals = a_handler_endpoint.get_types()
         for w_item_plural in w_item_plurals:
             self._map_handler_endpoints[w_item_plural] = None
-
-
-
 
     @Validate
     def validate(self, context):
