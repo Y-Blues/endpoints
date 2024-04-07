@@ -1,14 +1,15 @@
-
 """
     bean that provide request and response object
 """
+
 import json, re
 from urllib.parse import parse_qsl, urlsplit
 
+
 class EndpointResponse(object):
 
-    def __init__(self, status,a_header=None, a_meta=None, a_body=None):
-        """ need status"""
+    def __init__(self, status, a_header=None, a_meta=None, a_body=None):
+        """need status"""
         self._status = status
         self._meta = a_meta
         self._header = a_header
@@ -21,17 +22,13 @@ class EndpointResponse(object):
         if self._meta is None:
             return json.dumps(self._body)
         else:
-            w_resp = {
-                "status": self._status,
-                "meta": self._meta,
-                "data": None
-            }
+            w_resp = {"status": self._status, "meta": self._meta, "data": None}
             if self._body is not None:
                 if isinstance(self._body, dict):
                     w_resp["data"] = self._body
-                elif isinstance(self._body, list) :
+                elif isinstance(self._body, list):
                     w_body = []
-                    if len(self._body) > 0 :
+                    if len(self._body) > 0:
                         for w_json in self._body:
                             w_body.append(w_json)
                     w_resp["data"] = w_body
@@ -49,8 +46,8 @@ class EndpointResponse(object):
 
 class UrlPath(object):
 
-    def __init__(self, a_method,  a_url, a_api_description):
-        """ need status"""
+    def __init__(self, a_method, a_url, a_api_description):
+        """need status"""
         self._url = a_url
         w_url_no_query = a_url
         w_url_query = a_url
@@ -65,7 +62,7 @@ class UrlPath(object):
         self._type = self._split_url[0][1:]
         self._is_service = "$service" in self._split_url
 
-        if self._is_service :
+        if self._is_service:
             self._service_name = self._split_url[1]
         self._url_no_query = w_url_no_query.split("api/")[1]
         self._url_param = w_url_query
@@ -73,22 +70,23 @@ class UrlPath(object):
             self._item_plural_id = self.get_split_url()[1]
         # retrieve description url
         for w_path in a_api_description._body["paths"].keys():
-            w_path_pattern = re.sub("\{.*\}",".*", w_path).replace("/","\/").replace("$","\$")+"$"
-            if re.search(w_path_pattern,"/"+self._url_no_query):
+            w_path_pattern = (
+                re.sub("\{.*\}", ".*", w_path).replace("/", "\/").replace("$", "\$")
+                + "$"
+            )
+            if re.search(w_path_pattern, "/" + self._url_no_query):
                 w_path_split = w_path[1:].split("/")
-                i=0
+                i = 0
                 for w_part in w_path_split:
                     if w_part[0] == "{" and w_part[-1] == "}":
                         if self._query_param is None:
                             self._query_param = {}
                         self._query_param[w_part[1:-1]] = self.get_split_url()[i]
-                    i=i+1
-
-
-
+                    i = i + 1
 
     def get_split_url(self):
         return self._split_url
+
     def get_url_no_query(self):
         return self._url_no_query
 
@@ -110,30 +108,34 @@ class UrlPath(object):
     def get_params(self):
         return self._query_param
 
+
 class EndpointResponseModel(EndpointResponse):
 
-    def __init__(self, status,a_header=None, a_meta=None, a_body=None, a_storage_property="_mongo_model"):
-        """ need status"""
-        super(EndpointResponseModel,self).__init__(status,a_header,a_meta, a_body)
+    def __init__(
+        self,
+        status,
+        a_header=None,
+        a_meta=None,
+        a_body=None,
+        a_storage_property="_mongo_model",
+    ):
+        """need status"""
+        super(EndpointResponseModel, self).__init__(status, a_header, a_meta, a_body)
         self._storage_property = a_storage_property
 
     def get_json(self):
         if self._meta is None:
             return json.dumps(self._body)
         else:
-            w_resp = {
-                "status": self._status,
-                "meta": self._meta,
-                "data": None
-            }
+            w_resp = {"status": self._status, "meta": self._meta, "data": None}
             if self._body is not None:
                 if isinstance(self._body, dict):
                     w_resp["data"] = self._body
                 if self._storage_property in self._body.keys():
-                    w_resp["data"]  = self._body[self._storage_property]
-                elif isinstance(self._body, list) :
+                    w_resp["data"] = self._body[self._storage_property]
+                elif isinstance(self._body, list):
                     w_body = []
-                    if len(self._body) > 0 :
+                    if len(self._body) > 0:
                         if self._storage_property in self._body[0].keys():
                             for w_model in self._body:
                                 w_body.append(w_model[self._storage_property])
@@ -153,7 +155,7 @@ class EndpointResponseModel(EndpointResponse):
 class UrlPathModel(UrlPath):
 
     def __init__(self, a_method, a_url, a_api_description):
-        """ need status"""
+        """need status"""
         super().__init__(a_method, a_url, a_api_description)
 
         self._is_schema = "$schema" in self.get_split_url()
@@ -161,13 +163,11 @@ class UrlPathModel(UrlPath):
 
         self._is_empty = "$empty" in self.get_split_url()
 
-
-
     def is_crud(self):
-        return  not self._is_schema and not self._is_empty and not self._is_multipart
+        return not self._is_schema and not self._is_empty and not self._is_multipart
 
     def is_draft(self):
-        return  self._query_param is not None and "draft" in self._query_param
+        return self._query_param is not None and "draft" in self._query_param
 
     def get_draft(self):
         return self._query_param["draft"] if self.is_draft() else None

@@ -9,7 +9,7 @@ import os
 import pelix.remote
 import logging
 import json
-from src.main.python.beans import UrlPath, EndpointResponse
+from src.main.python import UrlPath, EndpointResponse
 from pelix.ipopo.decorators import (
     ComponentFactory,
     Requires,
