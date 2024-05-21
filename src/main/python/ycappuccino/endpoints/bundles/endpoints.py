@@ -1,6 +1,6 @@
 # app="all"
-from ycappuccino.api.core.api import IActivityLogger
-from ycappuccino.api.endpoints.api import IEndpoint
+from ycappuccino.api.core import IActivityLogger
+from ycappuccino.api.endpoints import IEndpoint
 import traceback
 
 from ycappuccino.core.decorator_app import Layer
@@ -9,11 +9,7 @@ import os
 import pelix.remote
 import logging
 import json
-<<<<<<<< HEAD:src/main/python/ycappuccino/http/bundles/endpoints.py
-from src.main.python import UrlPath, EndpointResponse
-========
-from ycappuccino.endpoint.beans import UrlPath, EndpointResponse
->>>>>>>> ef089f4e41b986d8981c68ed1581e817aafd1285:src/main/python/ycappuccino/endpoints/bundles/endpoints.py
+from ycappuccino.api.endpoints import UrlPath, EndpointResponse
 from pelix.ipopo.decorators import (
     ComponentFactory,
     Requires,
@@ -25,8 +21,8 @@ from pelix.ipopo.decorators import (
     Instantiate,
     Property,
 )
-from ycappuccino.api.endpoints.api import IRightManager, IHandlerEndpoint
-from ycappuccino.api.core.api import IService
+from ycappuccino.api.endpoints import IRightManager, IHandlerEndpoint
+from ycappuccino.api.core import IService
 
 _logger = logging.getLogger(__name__)
 
